@@ -1,6 +1,9 @@
 package server.galaxyunderchaos;
 
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.level.block.SaplingBlock;
+import net.neoforged.neoforge.common.DeferredSpawnEggItem;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
@@ -35,7 +38,17 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import server.galaxyunderchaos.block.*;
+import server.galaxyunderchaos.data.ModDataComponentTypes;
+import server.galaxyunderchaos.entity.AcidSpiderEntity;
 import server.galaxyunderchaos.item.*;
+import server.galaxyunderchaos.loot.ModLootModifiers;
+import server.galaxyunderchaos.sound.ModSounds;
+import server.galaxyunderchaos.worldgen.biome.ModBiomes;
+import server.galaxyunderchaos.worldgen.tree.ModTreeGrowers;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Supplier;
 
 // The value here should match an entry in the META-INF/neoforge.mods.toml file
 @Mod(galaxyunderchaos.MODID)
@@ -49,26 +62,9 @@ public class galaxyunderchaos
     public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(MODID);
     // Create a Deferred Register to hold Items which will all be registered under the "examplemod" namespace
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(MODID);
-    // Create a Deferred Register to hold CreativeModeTabs which will all be registered under the "examplemod" namespace
+    public static final DeferredRegister<EntityType<?>> ENTITY_TYPES =
+            DeferredRegister.create(BuiltInRegistries.ENTITY_TYPE, galaxyunderchaos.MODID);
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
-
-//    // Creates a new Block with the id "examplemod:example_block", combining the namespace and path
-//    public static final DeferredBlock<Block> EXAMPLE_BLOCK = BLOCKS.registerSimpleBlock("example_block", BlockBehaviour.Properties.of().mapColor(MapColor.STONE));
-//    // Creates a new BlockItem with the id "examplemod:example_block", combining the namespace and path
-//    public static final DeferredItem<BlockItem> EXAMPLE_BLOCK_ITEM = ITEMS.registerSimpleBlockItem("example_block", EXAMPLE_BLOCK);
-//
-//    // Creates a new food item with the id "examplemod:example_id", nutrition 1 and saturation 2
-//    public static final DeferredItem<Item> EXAMPLE_ITEM = ITEMS.registerSimpleItem("example_item", new Item.Properties().food(new FoodProperties.Builder()
-//            .alwaysEdible().nutrition(1).saturationModifier(2f).build()));
-//
-//    // Creates a creative tab with the id "examplemod:example_tab" for the example item, that is placed after the combat tab
-//    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> EXAMPLE_TAB = CREATIVE_MODE_TABS.register("example_tab", () -> CreativeModeTab.builder()
-//            .title(Component.translatable("itemGroup.examplemod")) //The language key for the title of your CreativeModeTab
-//            .withTabsBefore(CreativeModeTabs.COMBAT)
-//            .icon(() -> EXAMPLE_ITEM.get().getDefaultInstance())
-//            .displayItems((parameters, output) -> {
-//                output.accept(EXAMPLE_ITEM.get()); // Add the example item to the tab. For your own tabs, this method is preferred over the event
-//            }).build());
 
     public static final DeferredHolder<Block, EarthCrystalOre> CHROMIUM_ORE = BLOCKS.register("chromium_ore", EarthCrystalOre::new);
     public static final DeferredHolder<Block, EarthCrystalOre> CHROMIUM_DEEPSLATE_ORE = BLOCKS.register("chromium_deepslate_ore", EarthCrystalOre::new);
@@ -178,13 +174,16 @@ public class galaxyunderchaos
     public static final DeferredHolder<Block, DarkTempleStoneSlab> DARK_TEMPLE_STONE_SLAB = BLOCKS.register("dark_temple_stone_slab", DarkTempleStoneSlab::new);
     public static final DeferredItem<BlockItem> DARK_TEMPLE_STONE_SLAB_ITEM = (DeferredItem<BlockItem>) ITEMS.register("dark_temple_stone_slab",
             () -> new BlockItem(DARK_TEMPLE_STONE_SLAB.get(), new Item.Properties()));
+    public static final DeferredHolder<Item, DeferredSpawnEggItem> ACID_SPIDER_SPAWN_EGG = ITEMS.register("acid_spider_spawn_egg",
+            () -> new DeferredSpawnEggItem(galaxyunderchaos.ACID_SPIDER, 0x31afaf, 0xffac00,
+                    new Item.Properties()));
 
     public static final DeferredItem<Item> SHUURA = (DeferredItem<Item>) ITEMS.register("shuura", () -> new Item(new Item.Properties().food(new FoodProperties.Builder()
             .alwaysEdible().nutrition(6).saturationModifier(2f).build())));
-//    public static final DeferredHolder<Block, BleedingTable> BLEEDING_TABLE = BLOCKS.register("bleeding_table", BleedingTable::new);
-//
-//    public static final DeferredItem<BlockItem> BLEEDING_TABLE_ITEM = (DeferredItem<BlockItem>) ITEMS.register("bleeding_table",
-//            () -> new BlockItem(BLEEDING_TABLE.get(), new Item.Properties()));
+    public static final DeferredHolder<Block, BleedingTable> BLEEDING_TABLE = BLOCKS.register("bleeding_table", BleedingTable::new);
+
+    public static final DeferredItem<BlockItem> BLEEDING_TABLE_ITEM = (DeferredItem<BlockItem>) ITEMS.register("bleeding_table",
+            () -> new BlockItem(BLEEDING_TABLE.get(), new Item.Properties()));
 
     public static final DeferredHolder<Block, Holocron> JEDI_HOLOCRON = BLOCKS.register("jedi_holocron", Holocron::new);
     public static final DeferredItem<BlockItem> JEDI_HOLOCRON_ITEM = (DeferredItem<BlockItem>) ITEMS.register("jedi_holocron",
@@ -202,9 +201,9 @@ public class galaxyunderchaos
     public static final DeferredItem<BlockItem> SITH_GUARD_STATUE_ITEM = (DeferredItem<BlockItem>) ITEMS.register("sith_guard_statue",
             () -> new BlockItem(SITH_GUARD_STATUE.get(), new Item.Properties()));
 
-//    public static final DeferredHolder<Block, LightsaberCraftingTableBlock> LIGHTSABER_CRAFTING_TABLE = BLOCKS.register("lightsaber_crafting_table", LightsaberCraftingTableBlock::new);
-//    public static final DeferredItem<BlockItem> LIGHTSABER_CRAFTING_TABLE_ITEM = (DeferredItem<BlockItem>) ITEMS.register("lightsaber_crafting_table",
-//            () -> new BlockItem(LIGHTSABER_CRAFTING_TABLE.get(), new Item.Properties()));
+    public static final DeferredHolder<Block, LightsaberCraftingTableBlock> LIGHTSABER_CRAFTING_TABLE = BLOCKS.register("lightsaber_crafting_table", LightsaberCraftingTableBlock::new);
+    public static final DeferredItem<BlockItem> LIGHTSABER_CRAFTING_TABLE_ITEM = (DeferredItem<BlockItem>) ITEMS.register("lightsaber_crafting_table",
+            () -> new BlockItem(LIGHTSABER_CRAFTING_TABLE.get(), new Item.Properties()));
 
     public static final DeferredHolder<Block, AncientTempleStone> ANCIENT_TEMPLE_STONE = BLOCKS.register("ancient_temple_stone", AncientTempleStone::new);
     public static final DeferredItem<BlockItem> ANCIENT_TEMPLE_STONE_ITEM = (DeferredItem<BlockItem>) ITEMS.register("ancient_temple_stone",
@@ -251,10 +250,10 @@ public class galaxyunderchaos
     public static final DeferredItem<BlockItem> DARK_TEMPLE_STONE_WALL_ITEM = (DeferredItem<BlockItem>) ITEMS.register("dark_temple_stone_wall",
             () -> new BlockItem(DARK_TEMPLE_STONE_WALL.get(), new Item.Properties()));
 
-//    public static final DeferredHolder<Block, SaplingBlock> BLBA_SAPLING = BLOCKS.register("blba_sapling",
-//            () -> new SaplingBlock(ModTreeGrowers.BLBA, BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_SAPLING)));
-//    public static final DeferredItem<BlockItem> BLBA_SAPLING_ITEM = (DeferredItem<BlockItem>) ITEMS.register("blba_sapling",
-//            () -> new BlockItem(BLBA_SAPLING.get(), new Item.Properties()));
+    public static final DeferredHolder<Block, SaplingBlock> BLBA_SAPLING = BLOCKS.register("blba_sapling",
+            () -> new SaplingBlock(ModTreeGrowers.BLBA, BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_SAPLING)));
+    public static final DeferredItem<BlockItem> BLBA_SAPLING_ITEM = (DeferredItem<BlockItem>) ITEMS.register("blba_sapling",
+            () -> new BlockItem(BLBA_SAPLING.get(), new Item.Properties()));
     public static final DeferredItem<Item> CHROMIUM_INGOT = (DeferredItem<Item>) ITEMS.register("chromium_ingot",
             () -> new Item(new Item.Properties()));
 
@@ -320,29 +319,29 @@ public class galaxyunderchaos
     public static final DeferredItem<Item> YELLOW_KYBER = (DeferredItem<Item>) ITEMS.register("yellow_kyber",
             () -> new Item(new Item.Properties()));
 
-//    public static final DeferredItem<TythonPortalItem> TYTHON_PORTAL_ITEM = (DeferredItem<TythonPortalItem>) ITEMS.register("tython_portal",
-//            () -> new TythonPortalItem(new Item.Properties().stacksTo(1)));
-//
-//    public static final DeferredItem<MustafarPortalItem> MUSTAFAR_PORTAL_ITEM = (DeferredItem<MustafarPortalItem>) ITEMS.register("mustafar_portal",
-//            () -> new MustafarPortalItem(new Item.Properties().stacksTo(1)));
-//
-//    public static final DeferredItem<NabooPortalItem> NABOO_PORTAL_ITEM = (DeferredItem<NabooPortalItem>) ITEMS.register("naboo_portal",
-//            () -> new NabooPortalItem(new Item.Properties().stacksTo(1)));
-//
-//    public static final DeferredItem<IlumPortalItem> ILUM_PORTAL_ITEM = (DeferredItem<IlumPortalItem>) ITEMS.register("ilum_portal",
-//            () -> new IlumPortalItem(new Item.Properties().stacksTo(1)));
-//
-//    public static final DeferredItem<OssusPortalItem> OSSUS_PORTAL_ITEM = (DeferredItem<OssusPortalItem>) ITEMS.register("ossus_portal",
-//            () -> new OssusPortalItem(new Item.Properties().stacksTo(1)));
-//
-//    public static final DeferredItem<MalachorPortalItem> MALACHOR_PORTAL_ITEM = (DeferredItem<MalachorPortalItem>) ITEMS.register("malachor_portal",
-//            () -> new MalachorPortalItem(new Item.Properties().stacksTo(1)));
-//
-//    public static final DeferredItem<KorribanPortalItem> KORRIBAN_PORTAL_ITEM = (DeferredItem<KorribanPortalItem>) ITEMS.register("korriban_portal",
-//            () -> new KorribanPortalItem(new Item.Properties().stacksTo(1)));
-//
-//    public static final DeferredItem<DantooinePortalItem> DANTOOINE_PORTAL_ITEM = (DeferredItem<DantooinePortalItem>) ITEMS.register("dantooine_portal",
-//            () -> new DantooinePortalItem(new Item.Properties().stacksTo(1)));
+    public static final DeferredItem<TythonPortalItem> TYTHON_PORTAL_ITEM = (DeferredItem<TythonPortalItem>) ITEMS.register("tython_portal",
+            () -> new TythonPortalItem(new Item.Properties().stacksTo(1)));
+
+    public static final DeferredItem<MustafarPortalItem> MUSTAFAR_PORTAL_ITEM = (DeferredItem<MustafarPortalItem>) ITEMS.register("mustafar_portal",
+            () -> new MustafarPortalItem(new Item.Properties().stacksTo(1)));
+
+    public static final DeferredItem<NabooPortalItem> NABOO_PORTAL_ITEM = (DeferredItem<NabooPortalItem>) ITEMS.register("naboo_portal",
+            () -> new NabooPortalItem(new Item.Properties().stacksTo(1)));
+
+    public static final DeferredItem<IlumPortalItem> ILUM_PORTAL_ITEM = (DeferredItem<IlumPortalItem>) ITEMS.register("ilum_portal",
+            () -> new IlumPortalItem(new Item.Properties().stacksTo(1)));
+
+    public static final DeferredItem<OssusPortalItem> OSSUS_PORTAL_ITEM = (DeferredItem<OssusPortalItem>) ITEMS.register("ossus_portal",
+            () -> new OssusPortalItem(new Item.Properties().stacksTo(1)));
+
+    public static final DeferredItem<MalachorPortalItem> MALACHOR_PORTAL_ITEM = (DeferredItem<MalachorPortalItem>) ITEMS.register("malachor_portal",
+            () -> new MalachorPortalItem(new Item.Properties().stacksTo(1)));
+
+    public static final DeferredItem<KorribanPortalItem> KORRIBAN_PORTAL_ITEM = (DeferredItem<KorribanPortalItem>) ITEMS.register("korriban_portal",
+            () -> new KorribanPortalItem(new Item.Properties().stacksTo(1)));
+
+    public static final DeferredItem<DantooinePortalItem> DANTOOINE_PORTAL_ITEM = (DeferredItem<DantooinePortalItem>) ITEMS.register("dantooine_portal",
+            () -> new DantooinePortalItem(new Item.Properties().stacksTo(1)));
 
     public static final DeferredItem<HiltItem> LOST_HILT = (DeferredItem<HiltItem>) ITEMS.register("lost_hilt",
             () -> new HiltItem("green", new Item.Properties()));
@@ -376,11 +375,11 @@ public class galaxyunderchaos
             () -> new HiltItem("green", new Item.Properties()));
     public static final DeferredItem<HiltItem> WISDOM_HILT = (DeferredItem<HiltItem>) ITEMS.register("wisdom_hilt",
             () -> new HiltItem("blue", new Item.Properties()));
-//
-//    public static final DeferredItem<BoganPortalItem> BOGAN_PORTAL_ITEM = (DeferredItem<BoganPortalItem>) ITEMS.register("dantooine_portal",
-//            () -> new BoganPortalItem(new Item.Properties().stacksTo(1)));
-//    public static final DeferredItem<AshlaPortalItem> ASHLA_PORTAL_ITEM = (DeferredItem<AshlaPortalItem>) ITEMS.register("dantooine_portal",
-//            () -> new AshlaPortalItem(new Item.Properties().stacksTo(1)));
+
+    public static final DeferredItem<BoganPortalItem> BOGAN_PORTAL_ITEM = (DeferredItem<BoganPortalItem>) ITEMS.register("bogan_portal",
+            () -> new BoganPortalItem(new Item.Properties().stacksTo(1)));
+    public static final DeferredItem<AshlaPortalItem> ASHLA_PORTAL_ITEM = (DeferredItem<AshlaPortalItem>) ITEMS.register("ashla_portal",
+            () -> new AshlaPortalItem(new Item.Properties().stacksTo(1)));
     public static final DeferredItem<Item> ACID_FORGED_PLATE = (DeferredItem<Item>) ITEMS.register("acid_forged_plate",
             () -> new Item(new Item.Properties()));
     public static final DeferredItem<Item> ACIDIC_VENOM_SAC = (DeferredItem<Item>) ITEMS.register("acidic_venom_sac",
@@ -395,6 +394,34 @@ public class galaxyunderchaos
             () -> new HiltItem("blue", new Item.Properties()));
     public static final DeferredItem<HiltItem> BAROSHE_HILT = (DeferredItem<HiltItem>) ITEMS.register("baroshe_hilt",
             () -> new HiltItem("blue", new Item.Properties()));
+    public static final Map<String, DeferredHolder<Item, Item>> LIGHTSABERS = new HashMap<>();
+
+    public static void registerLightsabers() {
+        String[] bladeColors = {
+                "red", "blue", "green", "yellow", "cyan",
+                "white", "magenta", "purple", "pink",
+                "lime_green", "turquoise", "orange", "blood_orange"
+        };
+
+        String[] hiltNames = {
+                "apprentice", "chosen", "emperor", "legacy", "padawan",
+                "resolve", "talon", "valor", "wisdom", "lost", "aegis",
+                "grace", "guard", "harmony", "skustell", "fallen",
+                "negotiator", "baroshe", "knightfall"
+        };
+
+        for (String color : bladeColors) {
+            for (String hilt : hiltNames) {
+                String id = color + "_" + hilt + "_lightsaber";
+                LIGHTSABERS.put(id, ITEMS.register(id, () -> new LightsaberItem(color, new Item.Properties().durability(1))));
+            }
+        }
+    }
+
+    // #ENTITIES
+    public static final Supplier<EntityType<AcidSpiderEntity>> ACID_SPIDER =
+            ENTITY_TYPES.register("acid_spider", () -> EntityType.Builder.of(AcidSpiderEntity::new, MobCategory.CREATURE)
+                    .sized(1.5f, 1.5f).build("acid_spider"));
 
     // The constructor for the mod class is the first code that is run when your mod is loaded.
     // FML will recognize some parameter types like IEventBus or ModContainer and pass them in automatically.
@@ -414,7 +441,18 @@ public class galaxyunderchaos
         // Note that this is necessary if and only if we want *this* class (ExampleMod) to respond directly to events.
         // Do not add this line if there are no @SubscribeEvent-annotated functions in this class, like onServerStarting() below.
         NeoForge.EVENT_BUS.register(this);
-
+//        ENTITY_TYPES.register(modEventBus);
+        ModBiomes.BIOMES.register(modEventBus);
+        registerLightsabers();
+//        KeyBindings.init();
+        ModSounds.register(modEventBus);
+        ENTITY_TYPES.register(modEventBus);
+        ModDataComponentTypes.register(modEventBus);
+//        NeoForge.EVENT_BUS.register(LightsaberBeltRenderer.class);
+//        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.SPEC);
+//        modEventBus.addListener(this::clientsetup);
+//        NeoForge.EVENT_BUS.register(HyperspaceOverlayRenderer.class);
+        ModLootModifiers.register(modEventBus);
         // Register the item to a creative tab
 //        modEventBus.addListener(this::addCreative);
 
