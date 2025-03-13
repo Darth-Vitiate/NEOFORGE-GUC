@@ -12,10 +12,11 @@
 //import net.neoforged.api.distmarker.Dist;
 //import net.neoforged.client.event.RenderPlayerEvent;
 //import net.neoforged.eventbus.api.SubscribeEvent;
+//import net.neoforged.fml.common.EventBusSubscriber;
 //import net.neoforged.fml.common.Mod;
 //import server.galaxyunderchaos.item.LightsaberItem;
 //
-//@Mod.EventBusSubscriber(modid = "galaxyunderchaos", bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
+//@EventBusSubscriber(modid = "galaxyunderchaos", bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 //public class LightsaberBeltRenderer {
 //
 //    @SubscribeEvent

@@ -1,5 +1,7 @@
 package server.galaxyunderchaos;
 
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.level.block.SaplingBlock;
@@ -498,6 +500,10 @@ public class galaxyunderchaos
             // Some client setup code
             LOGGER.info("HELLO FROM CLIENT SETUP");
             LOGGER.info("MINECRAFT NAME >> {}", Minecraft.getInstance().getUser().getName());
+            ModItemProperties.addCustomItemProperties();
+            galaxyunderchaos.LIGHTSABERS.values().forEach(lightsaber ->
+                    ItemBlockRenderTypes.setRenderLayer(Block.byItem(lightsaber.get()), RenderType.translucent())
+            );
         }
     }
 }

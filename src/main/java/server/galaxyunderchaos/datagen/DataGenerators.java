@@ -14,8 +14,7 @@ import server.galaxyunderchaos.data.ModBlockTagsProvider;
 import server.galaxyunderchaos.data.ModItemModelProvider;
 import server.galaxyunderchaos.data.ModRecipeHandler;
 import server.galaxyunderchaos.galaxyunderchaos;
-import server.galaxyunderchaos.worldgen.ModDatapackEntries;
-
+import server.galaxyunderchaos.data.ModBlockLootTableProvider;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -30,8 +29,8 @@ public class DataGenerators {
         CompletableFuture<HolderLookup.Provider> lookupProvider = event.getLookupProvider();
 
         // Loot Tables
-//        generator.addProvider(event.includeServer(), new LootTableProvider(packOutput, Collections.emptySet(),
-//                List.of(new LootTableProvider.SubProviderEntry(ModBlockLootTableProvider::new, LootContextParamSets.BLOCK)), lookupProvider));
+        generator.addProvider(event.includeServer(), new LootTableProvider(packOutput, Collections.emptySet(),
+                List.of(new LootTableProvider.SubProviderEntry(ModBlockLootTableProvider::new, LootContextParamSets.BLOCK)), lookupProvider));
 
 
         // Recipes

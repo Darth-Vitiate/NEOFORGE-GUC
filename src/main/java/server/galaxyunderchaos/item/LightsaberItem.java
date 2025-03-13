@@ -2,6 +2,8 @@ package server.galaxyunderchaos.item;
 
 import client.renderer.ModItemRenderer;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
+import net.minecraft.client.renderer.item.ClampedItemPropertyFunction;
+import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.resources.ResourceKey;
@@ -36,7 +38,7 @@ public class LightsaberItem extends SwordItem {
 
     public LightsaberItem(String bladeColor, Item.Properties properties) {
         super(ModToolTiers.LIGHTSABER, new Item.Properties()
-                .attributes(SwordItem.createAttributes(ModToolTiers.LIGHTSABER, 2, -2.4F)));
+                .attributes(SwordItem.createAttributes(ModToolTiers.LIGHTSABER, 21, -2.4F)));
         this.bladeColor = bladeColor;
     }
 
@@ -74,6 +76,7 @@ public class LightsaberItem extends SwordItem {
     public static int getLightLevel(ItemStack stack) {
         return (stack.getItem() instanceof LightsaberItem ls && ls.isActive(stack)) ? 15 : 0;
     }
+
     @Override
     public boolean mineBlock(ItemStack stack, Level level, BlockState state, BlockPos pos, LivingEntity entity) {
         if (isActive(stack) && level.isClientSide && entity instanceof Player player) {
@@ -171,5 +174,15 @@ public class LightsaberItem extends SwordItem {
         );
         return cookingMap.getOrDefault(rawFood, null);
     }
+    @Override
+    public void initializeClient(Consumer<IClientItemExtensions> consumer) {
+        consumer.accept(new IClientItemExtensions() {
+            private final BlockEntityWithoutLevelRenderer customRenderer = new ModItemRenderer();
 
+            @Override
+            public BlockEntityWithoutLevelRenderer getCustomRenderer() {
+                return customRenderer;
+            }
+        });
+    }
 }
